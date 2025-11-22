@@ -10,11 +10,12 @@ export default function Login(){
     e.preventDefault();
     try{
       const res = await API.post('/auth/login', { email, password });
-      const { token } = res.data;
+      const { token, role } = res.data;
       setToken(token);
       localStorage.setItem('ef_token', token);
+      localStorage.setItem('ef_role', role);
       setMsg('Logged in — token saved.');
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }catch(err){
       setMsg(err?.response?.data?.message || 'Login failed');
     }

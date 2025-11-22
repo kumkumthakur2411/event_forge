@@ -6,13 +6,24 @@ export default function Register(){
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('client')
+  const [categories, setCategories] = useState([])
+  const [selectedCats, setSelectedCats] = useState([])
   const [msg, setMsg] = useState('')
+
+  React.useEffect(()=>{
+    // load categories for vendor registration
+    API.get('/categories').then(r=>setCategories(r.data)).catch(()=>{})
+  },[])
 
   const submit = async (e) => {
     e.preventDefault();
     try{
-      const res = await API.post('/auth/register', { name, email, password, role });
+      const payload = { name, email, password, role };
+      if(role === 'vendor') payload.categories = selectedCats;
+      const res = await API.post('/auth/register', payload);
       setMsg(res.data.message || 'Registered');
+      localStorage.setItem('ef_role', role);
+      setTimeout(() => window.location.href = '/login', 1500);
     }catch(err){
       setMsg(err?.response?.data?.message || 'Register failed');
     }
@@ -30,6 +41,22 @@ export default function Register(){
           <option value="client">Client</option>
           <option value="vendor">Vendor</option>
         </select>
+        {role === 'vendor' && (
+          <div className="mb-4">
+            <p className="text-sm font-semibold mb-2">Select Categories</p>
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map(c=> (
+                <label key={c._id} className="flex items-center gap-2">
+                  <input type="checkbox" value={c._id} checked={selectedCats.includes(c._id)} onChange={(e)=>{
+                    const id = c._1 || c._id;
+                    if(e.target.checked) setSelectedCats(prev=>[...prev, c._id]); else setSelectedCats(prev=>prev.filter(x=>x!==c._id))
+                  }} />
+                  <span className="text-sm">{c.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
         <button className="w-full bg-green-600 text-white p-2 rounded">Register</button>
       </form>
     </div>

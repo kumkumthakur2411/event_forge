@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import API, { setToken } from '../api'
+// Notifications disabled
 
 export default function Client(){
   const [user, setUser] = useState(null)
@@ -11,6 +12,8 @@ export default function Client(){
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
   const [location, setLocation] = useState('')
+  const [feedbackMsg, setFeedbackMsg] = useState('')
+  const [feedbackText, setFeedbackText] = useState('')
   const [msg, setMsg] = useState('')
 
   useEffect(()=>{
@@ -74,13 +77,42 @@ export default function Client(){
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-green-700 text-white p-4 flex justify-between">
+      {/* <nav className="bg-green-700 text-white p-4 flex justify-between">
         <h1 className="text-xl font-bold">Client Dashboard</h1>
-        <div>
+        <div className="flex items-center">
           <span className="mr-4">{user.email}</span>
           <button onClick={()=>{localStorage.clear(); window.location.href='/login'}} className="bg-red-600 px-3 py-1 rounded">Logout</button>
         </div>
-      </nav>
+      </nav> */}
+      <div className="flex flex-row items-start gap-6  p-2">
+      {/* Profile Image */}
+      <div className="w-40 h-40 rounded-[8vh] bg-red-300 "></div>
+      {/* Info */}
+      <div>
+        <div className="flex items-center pt-15 gap-2">
+          <h3 className="text-2xl font-extrabold text-gray-800">{user.email}</h3>
+
+          <button onClick={()=>{localStorage.clear(); window.location.href='/login'}} className="bg-red-600 px-3 py-1 rounded">Logout</button>
+ 
+
+         <span
+            className={`text-xs text-white px-2 py-1 rounded 
+            ${
+              user.profileComplete ? "bg-green-500" : "bg-red-600"
+            }`}
+          >
+            {user.profileComplete ? "Completed" : "Incomplete"}
+          </span>
+        </div>
+        <p className="text-xs text-gray-600 mt-1">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Illum, sequi.
+        </p>
+        <button onClick={()=>setEditingProfile(!editingProfile)} className="mt-2 bg-gray-800 text-xs text-white px-7 py-2 rounded hover:bg-gray-700 transition">
+          Edit Profile
+        </button>
+      </div>
+    </div>
+
 
       <div className="p-6">
         {msg && <div className="bg-green-100 p-3 rounded mb-4 text-green-700">{msg}</div>}
@@ -107,10 +139,14 @@ export default function Client(){
           )}
         </div>
 
-        <div className="flex gap-4 mb-6">
-          <button onClick={()=>setActiveTab('events')} className={`px-4 py-2 rounded ${activeTab==='events'?'bg-green-600 text-white':'bg-white'}`}>My Events</button>
-          <button onClick={()=>setActiveTab('post')} className={`px-4 py-2 rounded ${activeTab==='post'?'bg-green-600 text-white':'bg-white'}`}>Post Event</button>
-        </div>
+
+
+
+              <div className="flex gap-4 mb-6">
+                <button onClick={()=>setActiveTab('events')} className={`px-4 py-2 rounded ${activeTab==='events'?'bg-green-600 text-white':'bg-white'}`}>My Events</button>
+                <button onClick={()=>setActiveTab('post')} className={`px-4 py-2 rounded ${activeTab==='post'?'bg-green-600 text-white':'bg-white'}`}>Post Event</button>
+                <button onClick={()=>setActiveTab('feedback')} className={`px-4 py-2 rounded ${activeTab==='feedback'?'bg-green-600 text-white':'bg-white'}`}>Send Feedback</button>
+              </div>
 
         {/* Post Event */}
         {activeTab === 'post' && (
@@ -152,12 +188,37 @@ export default function Client(){
                         ))}
                       </div>
                     )}
+
+                    
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
+
+        {/* Feedback */}
+        {activeTab === 'feedback' && (
+          <div className="bg-white p-6 rounded shadow">
+            <h2 className="text-2xl mb-4">Send Feedback / Testimonial</h2>
+              <p className="text-sm text-gray-600 mb-3">Share your experience — your feedback may appear on the public landing page.</p>
+                {feedbackMsg && <div className="mb-3 p-2 rounded bg-green-100 text-green-700">{feedbackMsg}</div>}
+                  <textarea placeholder="Write your feedback here" value={feedbackText} onChange={e=>setFeedbackText(e.target.value)} className="w-full p-2 border mb-2 rounded" rows={5} />
+                    <div className="flex gap-2">
+                      <button onClick={async ()=>{
+                          if(!feedbackText) return setFeedbackMsg('Please enter feedback')
+                              try{
+                                const res = await API.post('/client/feedback', { message: feedbackText })
+                                setFeedbackMsg(res.data.message || 'Thanks for your feedback')
+                                setFeedbackText('')
+                              }catch(err){
+                                setFeedbackMsg('Error sending feedback')
+                              }
+                            }} className="bg-green-600 text-white px-4 py-2 rounded">Submit Feedback</button>
+                      <button onClick={()=>{setFeedbackText(''); setFeedbackMsg('')}} className="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+                    </div>
+          </div>
+        )}              
       </div>
     </div>
   )

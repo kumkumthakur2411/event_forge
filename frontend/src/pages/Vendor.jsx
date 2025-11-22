@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import API, { setToken } from '../api'
+// Notifications disabled
 
 export default function Vendor(){
   const [user, setUser] = useState(null)
@@ -46,7 +47,7 @@ export default function Vendor(){
       setMsg('Failed to load assigned events')
     }
   }
-
+  // active tab change effect
   useEffect(()=>{
     if(activeTab === 'events') loadAvailableEvents()
     if(activeTab === 'assigned') loadAssignedEvents()
@@ -99,10 +100,12 @@ export default function Vendor(){
   if(!user) return <div className="p-4">Loading...</div>
 
   return (
+    
     <div className="min-h-screen bg-gray-100">
+    {/* dashboard */}
       <nav className="bg-purple-700 text-white p-4 flex justify-between">
         <h1 className="text-xl font-bold">Vendor Dashboard</h1>
-        <div>
+        <div className="flex items-center">
           <span className="mr-4">{user.email}</span>
           <button onClick={()=>{localStorage.clear(); window.location.href='/login'}} className="bg-red-600 px-3 py-1 rounded">Logout</button>
         </div>
@@ -111,6 +114,7 @@ export default function Vendor(){
       <div className="p-6">
         {msg && <div className="bg-purple-100 p-3 rounded mb-4 text-purple-700">{msg}</div>}
 
+       {/* upper tab */}
         <div className="bg-white p-4 rounded shadow mb-6">
           <div className="flex justify-between items-center">
             <div>

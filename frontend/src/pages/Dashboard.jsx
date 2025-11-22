@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import API, { setToken } from '../api'
+// Notifications disabled
 
 export default function Dashboard(){
   const [user, setUser] = useState(null)
@@ -16,16 +17,22 @@ export default function Dashboard(){
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <h2 className="text-xl">You are not logged in</h2>
-        <a className="text-blue-600" href="/login">Login</a> or <a className="text-blue-600" href="/register">Register</a>
+        <a className="text-blue-600" href="/login">Login</a> or 
+        <a className="text-blue-600" href="/register">Register</a>
       </div>
     </div>
   )
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl mb-2">Dashboard</h1>
-      <p>Signed in as: <strong>{user.email}</strong> ({user.role})</p>
-      <p>Profile complete: {user.profileComplete ? 'Yes' : 'No'}</p>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-2xl mb-2">Dashboard</h1>
+          <p>Signed in as: <strong>{user.email}</strong> ({user.role})</p>
+          <p>Profile complete: {user.profileComplete ? 'Yes' : 'No'}</p>
+        </div>
+        {/* Notifications removed */}
+      </div>
       <div className="mt-4">
         {user.role === 'client' && <a href="/client" className="inline-block bg-green-600 text-white px-4 py-2 rounded">Go to Client Dashboard</a>}
         {user.role === 'vendor' && <a href="/vendor" className="inline-block bg-purple-600 text-white px-4 py-2 rounded">Go to Vendor Dashboard</a>}
@@ -35,3 +42,5 @@ export default function Dashboard(){
     </div>
   )
 }
+
+

@@ -23,6 +23,7 @@ exports.sendInterest = async (req, res) => {
     const q = await Quotation.create({ vendor: req.user._id, event: event._id, message, status: 'pending', vendorStatus: 'none' });
     event.vendorInterests.push(q._id);
     await event.save();
+    // Interest recorded (notification functionality removed)
     res.status(201).json({ message: 'Interest sent to admin', quotation: q });
   } catch (err) {
     console.error(err);
@@ -72,6 +73,7 @@ exports.updateAssignmentStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid action' });
     }
     await quote.save();
+    // Notification functionality removed; return updated quotation
     res.json({ message: 'Status updated', quotation: quote });
   } catch (err) {
     console.error(err);

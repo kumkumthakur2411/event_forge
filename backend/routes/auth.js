@@ -7,4 +7,7 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, me);
 
+// Notifications
+// Notifications endpoints removed - feature disabled
+
 module.exports = router;

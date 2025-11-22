@@ -10,12 +10,16 @@ const generateToken = (user) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, categories } = req.body;
     if (!email || !password || !role) return res.status(400).json({ message: 'Please provide required fields' });
     let userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
-    const user = await User.create({ name, email, password, role, status: role === 'admin' ? 'approved' : 'pending' });
+    const userData = { name, email, password, role, status: role === 'admin' ? 'approved' : 'pending' };
+    if (role === 'vendor' && Array.isArray(categories)) userData.categories = categories;
+    const user = await User.create(userData);
     // Admin accounts created via seed should be approved. Regular registrations need admin approval.
+    // Registration created (notification functionality removed)
+
     res.status(201).json({ message: 'Registration successful, pending admin approval', user: { id: user._id, email: user.email, role: user.role, status: user.status } });
   } catch (err) {
     console.error(err);

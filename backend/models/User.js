@@ -7,8 +7,15 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'vendor', 'client'], required: true },
   status: { type: String, enum: ['pending', 'approved', 'denied'], default: 'pending' },
+  categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   profile: { type: mongoose.Schema.Types.Mixed, default: {} },
-  profileComplete: { type: Boolean, default: false }
+  profileComplete: { type: Boolean, default: false },
+  description : {
+    type: string
+  },
+  phoneNo : {
+    type: Number
+  }
 }, { timestamps: true });
 
 UserSchema.pre('save', async function (next) {
