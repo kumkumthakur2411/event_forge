@@ -4,6 +4,7 @@ const Quotation = require('../models/Quotation');
 const Testimonial = require('../models/Testimonial');
 const WebImage = require('../models/WebImage');
 const Category = require('../models/Category');
+const EventImage = require('../models/EventImage');
 
 exports.listVendors = async (req, res) => {
   try{
@@ -90,6 +91,17 @@ exports.getVendorsByCategory = async (req, res) => {
     }).select('name email profile categories');
     
     res.json({ category, vendors });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.eventGallery = async (req, res) => {
+  try {
+    // return images approved for landing
+    const images = await EventImage.find({ approved: true, forLanding: true }).sort('-createdAt').populate('uploader', 'name email').populate('event', 'title');
+    res.json(images);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

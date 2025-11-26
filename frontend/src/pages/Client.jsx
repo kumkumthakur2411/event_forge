@@ -8,6 +8,10 @@ export default function Client(){
   const [events, setEvents] = useState([])
   const [editingProfile, setEditingProfile] = useState(false)
   const [profileData, setProfileData] = useState({})
+  const [profileImageFile, setProfileImageFile] = useState(null)
+  const [photos, setPhotos] = useState([])
+  const [uploadFiles, setUploadFiles] = useState(null)
+  // const [photos, setPhotos] = useState([]) // Keep photos for now, may be needed for old data
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
@@ -62,15 +66,61 @@ export default function Client(){
     }
   }
 
+  const handleFileChange = (e) => {
+    setProfileImageFile(e.target.files[0]);
+    // also collect profile photos if multiple
+    if(e.target.files && e.target.files.length > 0){
+      const arr = Array.from(e.target.files)
+      setPhotos(arr)
+    }
+  };
+
+  const handleUploadFilesChange = (e) => {
+    setUploadFiles(e.target.files)
+  }
+
+  const uploadPhotosForEvent = async (eventId) => {
+    if(!uploadFiles || uploadFiles.length === 0) return setMsg('Please select files to upload')
+    try{
+      const formData = new FormData();
+      for(let i=0;i<uploadFiles.length;i++) formData.append('photos', uploadFiles[i]);
+      const res = await API.post(`/client/events/${eventId}/photos`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setMsg(res.data.message || 'Uploaded')
+      setUploadFiles(null)
+      loadMyEvents()
+    }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || e.message)) }
+  }
+
   const updateProfile = async () => {
     try{
-      const res = await API.put('/client/profile', profileData)
+      const formData = new FormData();
+      Object.keys(profileData).forEach(key => {
+        formData.append(key, profileData[key]);
+      });
+      for (let i = 0; i < photos.length; i++) {
+        formData.append("photos", photos[i]);
+      }
+
+      const res = await API.patch('/client/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       setMsg(res.data.message)
-      setUser({...user, profileComplete: res.data.profileComplete})
+      setUser(res.data.user)
       setEditingProfile(false)
     }catch(e){
       setMsg('Error updating profile')
     }
+  }
+
+  const deleteAccount = async () => {
+    if(!window.confirm('Delete your account? This cannot be undone.')) return
+    try{
+      await API.delete('/client/profile')
+      localStorage.clear()
+      window.location.href = '/'
+    }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || e.message)) }
   }
 
   if(!user) return <div className="p-4">Loading...</div>
@@ -86,7 +136,11 @@ export default function Client(){
       </nav> */}
       <div className="flex flex-row items-start gap-6  p-2">
       {/* Profile Image */}
-      <div className="w-40 h-40 rounded-[8vh] bg-red-300 "></div>
+      <div className="w-40 h-40 rounded-[8vh] bg-red-300 ">
+        {user.photos && user.photos.length > 0 && (
+          <img src={`${import.meta.env.VITE_API_URL}${user.photos[0]}`} alt="profile" className="w-full h-full object-cover rounded-[8vh]" />
+        )}
+      </div>
       {/* Info */}
       <div>
         <div className="flex items-center pt-15 gap-2">
@@ -94,6 +148,7 @@ export default function Client(){
 
           <button onClick={()=>{localStorage.clear(); window.location.href='/login'}} className="bg-red-600 px-3 py-1 rounded">Logout</button>
  
+         <button onClick={deleteAccount} className="ml-2 bg-red-600 text-white px-3 py-1 rounded">Delete Account</button>
 
          <span
             className={`text-xs text-white px-2 py-1 rounded 
@@ -131,9 +186,21 @@ export default function Client(){
               <input placeholder="Name" value={profileData.name || ''} onChange={e=>setProfileData({...profileData, name: e.target.value})} className="w-full p-2 border mb-2 rounded" />
               <input placeholder="Phone" value={profileData.phone || ''} onChange={e=>setProfileData({...profileData, phone: e.target.value})} className="w-full p-2 border mb-2 rounded" />
               <input placeholder="City" value={profileData.city || ''} onChange={e=>setProfileData({...profileData, city: e.target.value})} className="w-full p-2 border mb-4 rounded" />
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Profile Photos</label>
+                <input type="file" multiple onChange={handleFileChange} className="w-full p-2 border rounded" />
+              </div>
+
               <div className="flex gap-2">
                 <button onClick={updateProfile} className="bg-green-600 text-white px-4 py-2 rounded">Save</button>
                 <button onClick={()=>setEditingProfile(false)} className="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+              </div>
+
+              <div className="mt-4 flex gap-4 flex-wrap">
+                {user.photos && user.photos.map(photo => (
+                  <img key={photo} src={`${import.meta.env.VITE_API_URL}${photo}`} alt="profile" className="w-24 h-24 object-cover rounded" />
+                ))}
               </div>
             </div>
           )}
@@ -177,25 +244,50 @@ export default function Client(){
                     <p className="text-sm">Date: {e.date ? new Date(e.date).toLocaleDateString() : 'N/A'}</p>
                     <p className="text-sm">Location: {e.location}</p>
                     <p className="text-sm mt-2"><span className={`px-2 py-1 rounded text-xs font-bold ${e.status==='approved'?'bg-green-200':e.status==='denied'?'bg-red-200':'bg-yellow-200'}`}>{e.status}</span></p>
-                    {e.assignedVendors && e.assignedVendors.length > 0 && (
+                    {(e.quotations && e.quotations.length > 0) ? (
                       <div className="mt-3 p-3 bg-blue-50 rounded">
                         <p className="font-semibold text-sm mb-2">Assigned Vendors:</p>
-                        {e.assignedVendors.map(v=>(
-                          <div key={v._id} className="text-sm bg-white p-2 mb-1 rounded">
-                            <p className="font-semibold">{v.name || v.email}</p>
-                            <p className="text-gray-600">{v.email}</p>
+                        {e.quotations.map(q => (
+                          <div key={q._id} className="text-sm bg-white p-2 mb-1 rounded flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold">{q.vendor?.name || q.vendor?.email}</p>
+                              <p className="text-gray-600">{q.vendor?.email}</p>
+                            </div>
+                            <div>
+                              <div className={`px-2 py-0.5 rounded text-xs ${q.paid ? 'bg-green-200' : 'bg-yellow-200'}`}>{q.paid ? 'Paid' : 'Unpaid'}</div>
+                            </div>
                           </div>
                         ))}
                       </div>
+                    ) : (
+                      e.assignedVendors && e.assignedVendors.length > 0 && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded">
+                          <p className="font-semibold text-sm mb-2">Assigned Vendors:</p>
+                          {e.assignedVendors.map(v=>(
+                            <div key={v._id} className="text-sm bg-white p-2 mb-1 rounded">
+                              <p className="font-semibold">{v.name || v.email}</p>
+                              <p className="text-gray-600">{v.email}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )
                     )}
 
-                    
+                    <div className="mt-3">
+                      <p className="font-semibold text-sm mb-2">Upload event photos (these will be pending admin approval)</p>
+                      <input type="file" multiple onChange={handleUploadFilesChange} className="mb-2" />
+                      <div className="flex gap-2">
+                        <button onClick={()=>uploadPhotosForEvent(e._id)} className="bg-green-600 text-white px-3 py-1 rounded text-sm">Upload Photos</button>
+                        <button onClick={()=>setUploadFiles(null)} className="bg-gray-600 text-white px-3 py-1 rounded text-sm">Clear</button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
+        {/* Upload photos for client events (inside each event card) */}
 
         {/* Feedback */}
         {activeTab === 'feedback' && (

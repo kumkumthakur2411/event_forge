@@ -11,4 +11,7 @@ const QuotationSchema = new mongoose.Schema({
   vendorStatus: { type: String, enum: ['none', 'assigned', 'accepted', 'completed', 'denied'], default: 'none' }
 }, { timestamps: true });
 
+// paid indicates whether admin marked the assignment as paid for the vendor/client
+QuotationSchema.add({ paid: { type: Boolean, default: false } });
+
 module.exports = mongoose.model('Quotation', QuotationSchema);

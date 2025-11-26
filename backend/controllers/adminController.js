@@ -4,6 +4,8 @@ const Quotation = require('../models/Quotation');
 const Category = require('../models/Category');
 const Testimonial = require('../models/Testimonial');
 const WebImage = require('../models/WebImage');
+const EventImage = require('../models/EventImage');
+
 //get all user with sorting
 exports.getAllUsers = async (req, res) => {
   const { role, q, category  } = req.query;
@@ -18,7 +20,8 @@ exports.getAllUsers = async (req, res) => {
 //create category
 exports.createCategory = async (req, res) => {
   try {
-    const { name, description, imageUrl, altText } = req.body;
+    const { name, description, altText } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
 
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });
@@ -68,7 +71,8 @@ exports.getCategories = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, imageUrl, altText } = req.body;
+    const { name, description, altText } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
 
     const cat = await Category.findById(id);
     if (!cat) return res.status(404).json({ message: 'Category not found' });
@@ -220,6 +224,75 @@ exports.approveQuotation = async (req, res) => {
   // Notifications removed: simply return status
   res.json({ message: `Quotation ${quote.status}` });
 };
+
+// delete an event
+exports.deleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    
+    // Delete all quotations for this event
+    await Quotation.deleteMany({ event: id });
+    
+    // Delete the event
+    await Event.findByIdAndDelete(id);
+    
+    res.json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// delete a user (admin)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const u = await User.findById(id);
+    if(!u) return res.status(404).json({ message: 'User not found' });
+
+    // remove references: if client, remove their events; if vendor, remove their quotations and remove from assigned lists
+    if(u.role === 'client'){
+      const events = await Event.find({ postedBy: u._id });
+      for(const ev of events){
+        // delete related quotations
+        await Quotation.deleteMany({ event: ev._id });
+        await EventImage.deleteMany({ event: ev._id });
+        await ev.deleteOne();
+      }
+    } else if (u.role === 'vendor'){
+      await Quotation.deleteMany({ vendor: u._id });
+      // remove vendor from assignedVendors in events
+      await Event.updateMany({ assignedVendors: u._id }, { $pull: { assignedVendors: u._id } });
+    }
+
+    // remove uploaded images by this user
+    await EventImage.deleteMany({ uploader: u._id });
+
+    await User.findByIdAndDelete(id);
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// set payment flag on a quotation (admin)
+exports.setPaymentStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // quotation id
+    const { paid } = req.body;
+    const q = await Quotation.findById(id);
+    if(!q) return res.status(404).json({ message: 'Quotation not found' });
+    q.paid = Boolean(paid);
+    await q.save();
+    res.json({ message: 'Payment status updated', quotation: q });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 exports.getPendingTestimonials = async (req, res) => {
   try {
     const testimonials = await Testimonial.find({ approved: false }).sort('-createdAt');
@@ -250,9 +323,12 @@ exports.rejectTestimonial = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.uploadImage = async (req, res) => {
   try {
-    const { section, imageUrl, altText } = req.body;
+    const { section, altText } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
+
     if (!section || !imageUrl) return res.status(400).json({ message: 'section and imageUrl required' });
     const existing = await WebImage.findOne({ section });
     if (existing) {
@@ -269,6 +345,7 @@ exports.uploadImage = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.getImages = async (req, res) => {
   try {
     const images = await WebImage.find().sort('displayOrder');
@@ -278,6 +355,7 @@ exports.getImages = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 exports.deleteImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -288,3 +366,229 @@ exports.deleteImage = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Update admin's own profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { name } = req.body;
+    if (name) user.name = name;
+    // merge profile object
+    if (req.body.profile) {
+      try {
+        const p = typeof req.body.profile === 'string' ? JSON.parse(req.body.profile) : req.body.profile;
+        user.profile = { ...(user.profile || {}), ...p };
+      } catch (e) {
+        // ignore parse errors and treat as plain object
+        user.profile = { ...(user.profile || {}), ...req.body.profile };
+      }
+    }
+
+    if (req.file) {
+      user.profileImage = `/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+    const safe = user.toObject();
+    delete safe.password;
+    res.json({ message: 'Profile updated', user: safe });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Change admin password
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ message: 'currentPassword and newPassword required' });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'Password changed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Event images (gallery) management
+exports.createEventImage = async (req, res) => {
+  try {
+    const { event, altText, caption, forLanding } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
+    if (!imageUrl) return res.status(400).json({ message: 'image required' });
+    const img = await EventImage.create({ event: event || null, uploader: req.user._id, imageUrl, altText, caption, approved: Boolean(req.body.approved), forLanding: Boolean(forLanding) });
+    res.status(201).json({ message: 'Event image uploaded', image: img });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.listEventImages = async (req, res) => {
+  try {
+    // Filters and pagination
+    const { status, uploader, event, page = 1, limit = 10, q } = req.query;
+    const filter = {};
+    if (status === 'approved') filter.approved = true;
+    if (status === 'pending') filter.approved = false;
+    if (event) filter.event = event;
+
+    // if uploader provided as email, resolve to id
+    if (uploader) {
+      const byEmail = await User.findOne({ email: uploader });
+      if (byEmail) filter.uploader = byEmail._id;
+      else if (/^[0-9a-fA-F]{24}$/.test(uploader)) filter.uploader = uploader; // assume id
+    }
+
+    if (q) {
+      // simple text search on caption or altText
+      filter.$or = [ { caption: new RegExp(q, 'i') }, { altText: new RegExp(q, 'i') } ];
+    }
+
+    const pageNum = parseInt(page, 10) || 1;
+    const lim = Math.min(parseInt(limit, 10) || 10, 100);
+
+    const total = await EventImage.countDocuments(filter);
+    const images = await EventImage.find(filter)
+      .populate('event', 'title')
+      .populate('uploader', 'name email')
+      .sort('-createdAt')
+      .skip((pageNum - 1) * lim)
+      .limit(lim);
+
+    res.json({ images, total, page: pageNum, pages: Math.ceil(total / lim) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Admin dashboard stats
+exports.getStats = async (req, res) => {
+  try {
+    const vendorsCount = await User.countDocuments({ role: 'vendor' });
+    const clientsCount = await User.countDocuments({ role: 'client' });
+    const completedEvents = await Event.countDocuments({ status: 'approved' });
+    const pendingEvents = await Event.countDocuments({ status: 'pending' });
+    res.json({ vendorsCount, clientsCount, completedEvents, pendingEvents });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// list quotations with filters and pagination for admin payments view
+exports.listQuotations = async (req, res) => {
+  try {
+    const { status, vendor, event, page = 1, limit = 20, q } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (event) filter.event = event;
+    if (vendor) {
+      const byEmail = await User.findOne({ email: vendor });
+      if (byEmail) filter.vendor = byEmail._id;
+      else if (/^[0-9a-fA-F]{24}$/.test(vendor)) filter.vendor = vendor;
+    }
+    if (q) filter.$or = [{ message: new RegExp(q, 'i') }];
+
+    const pageNum = parseInt(page, 10) || 1;
+    const lim = Math.min(parseInt(limit, 10) || 20, 200);
+    const total = await Quotation.countDocuments(filter);
+    const quotes = await Quotation.find(filter)
+      .populate('vendor', 'name email')
+      .populate('event', 'title')
+      .sort('-createdAt')
+      .skip((pageNum - 1) * lim)
+      .limit(lim);
+    res.json({ quotations: quotes, total, page: pageNum, pages: Math.ceil(total / lim) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// bulk set payment status for multiple quotations
+exports.bulkSetPayment = async (req, res) => {
+  try {
+    const { ids, paid } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ message: 'ids required' });
+    const result = await Quotation.updateMany({ _id: { $in: ids } }, { $set: { paid: Boolean(paid) } });
+    res.json({ message: 'Updated', modifiedCount: result.modifiedCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.approveEventImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approve, forLanding } = req.body;
+    const img = await EventImage.findById(id);
+    if (!img) return res.status(404).json({ message: 'Image not found' });
+    if (typeof approve !== 'undefined') img.approved = Boolean(approve);
+    if (typeof forLanding !== 'undefined') img.forLanding = Boolean(forLanding);
+    await img.save();
+    res.json({ message: 'Image updated', image: img });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteEventImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await EventImage.findByIdAndDelete(id);
+    res.json({ message: 'Event image deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Mark quotation (vendor payment for event) as paid
+exports.markQuotationPaid = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const quotation = await Quotation.findByIdAndUpdate(
+      id,
+      { paid: true },
+      { new: true }
+    ).populate('vendor event');
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+    res.json({ message: 'Vendor marked as paid', quotation });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Mark quotation (vendor payment for event) as unpaid
+exports.markQuotationUnpaid = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const quotation = await Quotation.findByIdAndUpdate(
+      id,
+      { paid: false },
+      { new: true }
+    ).populate('vendor event');
+    if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
+    res.json({ message: 'Vendor marked as unpaid', quotation });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+

@@ -9,13 +9,15 @@ const UserSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'approved', 'denied'], default: 'pending' },
   categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   profile: { type: mongoose.Schema.Types.Mixed, default: {} },
+  profileImage: { type: String },
   profileComplete: { type: Boolean, default: false },
-  description : {
-    type: string
+  description: {
+    type: String
   },
-  phoneNo : {
-    type: Number
-  }
+  phoneNo: {
+    type: String
+  },
+  photos: [{ type: String }]
 }, { timestamps: true });
 
 UserSchema.pre('save', async function (next) {

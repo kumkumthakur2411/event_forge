@@ -1,165 +1,7 @@
-// import React, { useEffect, useState } from 'react'
-// import API, { setToken } from '../api'
-
-// export default function Categories(){
-//   const [cats, setCats] = useState([])
-//   const [msg, setMsg] = useState('')
-//   const [editing, setEditing] = useState(null)
-//   const [name, setName] = useState('')
-//   const [desc, setDesc] = useState('')
-//   const [newImageSection, setNewImageSection] = useState('hero') 
-//   const [newImageUrl, setNewImageUrl] = useState('')
-//   const [newImageAlt, setNewImageAlt] = useState('')
-  
-//   useEffect(()=>{
-//     const t = localStorage.getItem('ef_token')
-//     if(t) setToken(t)
-//     else window.location.href = '/login'
-//   },[])
-
-//   const load = async ()=>{
-//     try{
-//       const r = await API.get('/admin/categories')
-//       setCats(r.data)
-//     }catch(e){ setMsg('Failed to load categories: ' + (e?.response?.data?.message || '')) }
-//   }
-
-//   useEffect(()=>{ load() },[])
-
-//   const startEdit = (c)=>{ setEditing(c); setName(c.name); setDesc(c.description || '') }
-//   const cancelEdit = ()=>{ setEditing(null); setName(''); setDesc('') }
-
-//   const saveEdit = async () => {
-//     try{
-//       await API.patch(`/admin/categories/${editing._id}`, 
-//         { name, description: desc 
-//         })
-//       setMsg('Category updated')
-//       cancelEdit()
-//       load()
-//     }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || '')) }
-//   }
-
-//   const deleteCat = async (id) => {
-//     if(!window.confirm('Delete category? This will remove it from all vendor profiles.')) return;
-//     try{
-//       await API.delete(`/admin/categories/${id}`)
-//       setMsg('Category deleted')
-//       load()
-//     }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || '')) }
-//   }
-
-//     const uploadImage = async () => {
-//     if(!newImageUrl) return setMsg('Image URL required')
-//     try{
-//       await API.post('/admin/categories', { 
-//         section: newImageSection, 
-//         imageUrl: newImageUrl, 
-//         altText: newImageAlt })
-//       setMsg('Image uploaded')
-//       setNewImageUrl('')
-//       setNewImageAlt('')
-//       loadImages()
-//     }catch(e){
-//       setMsg('Error: ' + (e?.response?.data?.message || ''))
-//     }
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-6">
-//       <div className="bg-white p-4 rounded shadow">
-//         <h2 className="text-xl font-bold mb-4">Manage Categories</h2>
-//         {msg && <div className="bg-blue-100 p-2 rounded mb-4 text-blue-700">{msg}</div>}
-//         <div className="grid md:grid-cols-2 gap-4">
-//           <div>
-//             <h4 className="font-semibold mb-2">Existing Categories</h4>
-//             <div className="space-y-2">
-//               {cats.map(c=> (
-//                 <div key={c._id} className="p-2 border rounded flex justify-between items-center">
-//                   <div>
-//                     <div className="font-semibold">{c.name}</div>
-//                     <div className="text-sm text-gray-600">{c.description}</div>
-//                     <img src={c.imageUrl} alt={c.altText} />
-//                   </div>
-//                   <div className="flex gap-2">
-//                     <button onClick={()=>startEdit(c)} className="bg-yellow-500 text-white px-2 py-1 rounded text-sm">Edit</button>
-//                     <button onClick={()=>deleteCat(c._id)} className="bg-red-600 text-white px-2 py-1 rounded text-sm">Delete</button>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           <div>
-//             <h4 className="font-semibold mb-2">{editing? 'Edit Category' : 'Create Category'}</h4>
-//             <div className="grid gap-2">
-//               <input placeholder="Name" className="p-2 border rounded" value={name} onChange={e=>setName(e.target.value)} />
-//               <textarea placeholder="Description" className="p-2 border rounded" rows="4" value={desc} onChange={e=>setDesc(e.target.value)} />
-//                 <input 
-//                 placeholder="Image URL" 
-//                 value={newImageUrl} 
-//                 onChange={e=>setNewImageUrl(e.target.value)}
-//                  className="p-2 border rounded" />
-//                 <input 
-//                 placeholder="Alt text"
-//                  value={newImageAlt} 
-//                  onChange={e=>setNewImageAlt(e.target.value)} 
-//                  className="p-2 border rounded" />
-//               </div>
-//               <div className="mt-2">
-//                 <button onClick={uploadImage} 
-//                 className="bg-green-600 text-white px-3 py-1 rounded">Upload / Update</button>
-//               </div>
-//               {msg && <p className="mt-2 text-blue-600">{msg}</p>}
-
-
-//               <div className="flex gap-2">
-//                 {editing ? (
-//                   <>
-//                     <button onClick={saveEdit} className="bg-green-600 text-white px-3 py-1 rounded">Save</button>
-//                     <button onClick={cancelEdit} className="bg-gray-600 text-white px-3 py-1 rounded">Cancel</button>
-//                   </>
-//                 ) : (
-//                   <CreateCategoryForm onCreated={()=>{ setName(''); setDesc(''); load(); setMsg('Category created') }} setMsg={setMsg} />
-//                 )}
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-    
-//   )
-// }
-
-// function CreateCategoryForm({ onCreated, setMsg }){
-//   const [name, setName] = useState('')
-//   const [desc, setDesc] = useState('')
-//   const create = async ()=>{
-//     if(!name) return setMsg('Name required')
-//     try{
-//       await API.post('/admin/categories', { name, description: desc })
-//       setName(''); setDesc('')
-//       onCreated()
-//     }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || '')) }
-//   }
-//   return (
-//     <div className="flex gap-2">
-//       <input placeholder="Name" className="p-2 border rounded flex-1" value={name} onChange={e=>setName(e.target.value)} />
-//       <button onClick={create} className="bg-green-600 text-white px-3 py-1 rounded">Create</button>    
-//     </div>
-//   )
-// }
-
-
 import React, { useEffect, useState } from "react";
 import API, { setToken } from "../api";
+import { getFullImageUrl } from "../utils/getBaseUrl";
 
-/**
- * Robust Categories manager:
- * - unified create/edit form
- * - resilient image detection from multiple possible API shapes
- * - shows preview, onError fallback, and console debug info
- */
 export default function Categories() {
   const [cats, setCats] = useState([]);
   const [msg, setMsg] = useState("");
@@ -168,8 +10,9 @@ export default function Categories() {
   // Form states (shared for create/edit)
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [altText, setAltText] = useState("");
+  const [preview, setPreview] = useState("");
 
   useEffect(() => {
     const t = localStorage.getItem("ef_token");
@@ -237,26 +80,43 @@ export default function Categories() {
     setEditing(c);
     setName(c.name || "");
     setDesc(c.description || c.desc || "");
-    setImageUrl(detectImageUrl(c) || "");
+    setPreview(detectImageUrl(c) ? getFullImageUrl(detectImageUrl(c)) : "");
     setAltText(c.altText || c.alt || c.description || "");
+    setImageFile(null);
   };
 
   const cancelEdit = () => {
     setEditing(null);
     setName("");
     setDesc("");
-    setImageUrl("");
+    setImageFile(null);
     setAltText("");
+    setPreview("");
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
   const saveEdit = async () => {
     if (!name) return setMsg("Name required");
     try {
-      await API.patch(`/admin/categories/${editing._id}`, {
-        name,
-        description: desc,
-        imageUrl,
-        altText,
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", desc);
+      formData.append("altText", altText);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await API.patch(`/admin/categories/${editing._id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       setMsg("Category updated");
       cancelEdit();
@@ -269,11 +129,18 @@ export default function Categories() {
   const createCategory = async () => {
     if (!name) return setMsg("Name required");
     try {
-      await API.post("/admin/categories", {
-        name,
-        description: desc,
-        imageUrl,
-        altText,
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", desc);
+      formData.append("altText", altText);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await API.post("/admin/categories", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       setMsg("Category created");
       cancelEdit();
@@ -319,31 +186,29 @@ export default function Categories() {
                 console.debug("Category image detect:", { id: c._id, name: c.name, detectedUrl: url, raw: c });
 
                 return (
-                  <div
-                    key={c._id}
-                    className="p-3 border rounded flex justify-between items-start"
-                  >
-                    <div>
-                      <div className="font-semibold">{c.name}</div>
-                      <div className="text-sm text-gray-600">{c.description}</div>
-
-                      {/* image preview: use detected url or placeholder */}
-                      <div className="mt-2">
-                        <img
-                          src={url || placeholder}
-                          alt={c.altText || c.alt || c.name || "category image"}
-                          className="w-32 h-auto rounded border"
-                          onError={(e) => {
-                            // show placeholder on broken image and avoid infinite error loops
-                            if (e?.currentTarget?.src !== placeholder) {
-                              e.currentTarget.src = placeholder;
-                            }
-                          }}
-                          style={{ objectFit: "cover" }}
-                        />
-                      </div>
-                    </div>
-
+                                    <div
+                                      key={c._id}
+                                      className="p-3 border rounded flex justify-between items-start"
+                                    >
+                                      <div>
+                                        <div className="font-semibold">{c.name}</div>
+                                        <div className="text-sm text-gray-600">{c.description}</div>
+                                        {/* image preview: use detected url or placeholder */}
+                                        <div className="mt-2">
+                                          <img
+                                            src={url ? getFullImageUrl(url) : placeholder}
+                                            alt={c.altText || c.alt || c.name || "category image"}
+                                            className="w-32 h-auto rounded border"
+                                            onError={(e) => {
+                                              // show placeholder on broken image and avoid infinite error loops
+                                              if (e?.currentTarget?.src !== placeholder) {
+                                                e.currentTarget.src = placeholder;
+                                              }
+                                            }}
+                                            style={{ objectFit: "cover" }}
+                                          />
+                                        </div>
+                                      </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(c)}
@@ -385,10 +250,9 @@ export default function Categories() {
               />
 
               <input
+                type="file"
                 className="p-2 border rounded"
-                placeholder="Image URL (http(s):// or data: URI)"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={handleFileChange}
               />
 
               <input
@@ -398,9 +262,9 @@ export default function Categories() {
                 onChange={(e) => setAltText(e.target.value)}
               />
 
-              {imageUrl && (
+              {preview && (
                 <img
-                  src={imageUrl}
+                  src={preview}
                   alt={altText || name}
                   className="w-32 h-auto rounded border"
                   onError={(e) => {
@@ -444,239 +308,3 @@ export default function Categories() {
     </div>
   );
 }
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import API, { setToken } from "../api";
-
-// export default function Categories() {
-//   const [cats, setCats] = useState([]);
-//   const [msg, setMsg] = useState("");
-//   const [editing, setEditing] = useState(null);
-
-//   // Form states (used for both Create + Edit)
-//   const [name, setName] = useState("");
-//   const [desc, setDesc] = useState("");
-//   const [imageUrl, setImageUrl] = useState("");
-//   const [altText, setAltText] = useState("");
-
-//   useEffect(() => {
-//     const t = localStorage.getItem("ef_token");
-//     if (t) setToken(t);
-//     else window.location.href = "/login";
-//   }, []);
-
-//   const load = async () => {
-//     try {
-//       const r = await API.get("/admin/categories");
-//       setCats(r.data);
-//     } catch (e) {
-//       setMsg("Failed to load categories: " + (e?.response?.data?.message || ""));
-//     }
-//   };
-
-//   useEffect(() => {
-//     load();
-//   }, []);
-
-//   // START EDIT
-//   const startEdit = (c) => {
-//     setEditing(c);
-//     setName(c.name);
-//     setDesc(c.description || "");
-//     setImageUrl(c.imageUrl || "");
-//     setAltText(c.altText || "");
-//   };
-
-//   const cancelEdit = () => {
-//     setEditing(null);
-//     setName("");
-//     setDesc("");
-//     setImageUrl("");
-//     setAltText("");
-//   };
-
-//   // SAVE EDIT
-//   const saveEdit = async () => {
-//     if (!name) return setMsg("Name required");
-
-//     try {
-//       await API.patch(`/admin/categories/${editing._id}`, {
-//         name,
-//         description: desc,
-//         imageUrl,
-//         altText,
-//       });
-
-//       setMsg("Category updated");
-//       cancelEdit();
-//       load();
-//     } catch (e) {
-//       setMsg("Error: " + (e?.response?.data?.message || ""));
-//     }
-//   };
-
-//   // CREATE NEW CATEGORY
-//   const createCategory = async () => {
-//     if (!name) return setMsg("Name required");
-
-//     try {
-//       await API.post("/admin/categories", {
-//         name,
-//         description: desc,
-//         imageUrl,
-//         altText,
-//       });
-
-//       setMsg("Category created");
-//       cancelEdit();
-//       load();
-//     } catch (e) {
-//       setMsg("Error: " + (e?.response?.data?.message || ""));
-//     }
-//   };
-
-//   // DELETE CATEGORY
-//   const deleteCat = async (id) => {
-//     if (!window.confirm("Delete category?")) return;
-
-//     try {
-//       await API.delete(`/admin/categories/${id}`);
-//       setMsg("Category deleted");
-//       load();
-//     } catch (e) {
-//       setMsg("Error: " + (e?.response?.data?.message || ""));
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-6">
-//       <div className="bg-white p-4 rounded shadow">
-//         <h2 className="text-xl font-bold mb-4">Manage Categories</h2>
-
-//         {msg && (
-//           <div className="bg-blue-100 p-2 rounded mb-4 text-blue-700">{msg}</div>
-//         )}
-
-//         <div className="grid md:grid-cols-2 gap-4">
-//           {/* LEFT SIDE – EXISTING CATEGORIES */}
-//           <div>
-//             <h4 className="font-semibold mb-2">Existing Categories</h4>
-
-//             <div className="space-y-3">
-//               {cats.map((c) => (
-//                 <div
-//                   key={c._id}
-//                   className="p-3 border rounded flex justify-between items-start"
-//                 >
-//                   <div>
-//                     <div className="font-semibold">{c.name}</div>
-//                     <div className="text-sm text-gray-600">{c.description}</div>
-
-//                     {c.imageUrl && (
-//                       <img
-//                         src={c.imageUrl}
-//                         alt={c.altText}
-//                         className="w-32 h-auto rounded mt-2 border"
-//                       />
-//                     )}
-//                   </div>
-
-//                   <div className="flex gap-2">
-//                     <button
-//                       onClick={() => startEdit(c)}
-//                       className="bg-yellow-500 text-white px-2 py-1 rounded text-sm"
-//                     >
-//                       Edit
-//                     </button>
-//                     <button
-//                       onClick={() => deleteCat(c._id)}
-//                       className="bg-red-600 text-white px-2 py-1 rounded text-sm"
-//                     >
-//                       Delete
-//                     </button>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           {/* RIGHT SIDE – CREATE/EDIT FORM */}
-//           <div>
-//             <h4 className="font-semibold mb-2">
-//               {editing ? "Edit Category" : "Create Category"}
-//             </h4>
-
-//             <div className="grid gap-3">
-//               <input
-//                 className="p-2 border rounded"
-//                 placeholder="Category Name"
-//                 value={name}
-//                 onChange={(e) => setName(e.target.value)}
-//               />
-
-//               <textarea
-//                 className="p-2 border rounded"
-//                 rows="3"
-//                 placeholder="Description"
-//                 value={desc}
-//                 onChange={(e) => setDesc(e.target.value)}
-//               />
-
-//               <input
-//                 className="p-2 border rounded"
-//                 placeholder="Image URL"
-//                 value={imageUrl}
-//                 onChange={(e) => setImageUrl(e.target.value)}
-//               />
-
-//               <input
-//                 className="p-2 border rounded"
-//                 placeholder="Alt Text"
-//                 value={altText}
-//                 onChange={(e) => setAltText(e.target.value)}
-//               />
-
-//               {/* Image Preview */}
-//               {imageUrl && (
-//                 <img
-//                   src={imageUrl}
-//                   alt={altText}
-//                   className="w-32 h-auto rounded border"
-//                 />
-//               )}
-
-//               <div className="flex gap-2 mt-2">
-//                 {editing ? (
-//                   <>
-//                     <button
-//                       onClick={saveEdit}
-//                       className="bg-green-600 text-white px-3 py-1 rounded"
-//                     >
-//                       Save
-//                     </button>
-//                     <button
-//                       onClick={cancelEdit}
-//                       className="bg-gray-600 text-white px-3 py-1 rounded"
-//                     >
-//                       Cancel
-//                     </button>
-//                   </>
-//                 ) : (
-//                   <button
-//                     onClick={createCategory}
-//                     className="bg-green-600 text-white px-3 py-1 rounded"
-//                   >
-//                     Create
-//                   </button>
-//                 )}
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }

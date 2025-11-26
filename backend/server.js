@@ -11,6 +11,7 @@ try {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use('/api/uploads', express.static('uploads'));
 
   console.log('Server startup: connecting to DB');
   connectDB();

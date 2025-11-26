@@ -1,0 +1,143 @@
+/* ------------------------------
+   Animated How-It-Works Section
+--------------------------------*/
+
+/* Parallax blobs */
+.how-blobs-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.blob {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.45;
+  animation: floatBlob 10s ease-in-out infinite alternate;
+}
+
+.blob-purple {
+  background: #c084fc;
+  left: -100px;
+  top: -80px;
+}
+
+.blob-pink {
+  background: #f472b6;
+  right: -120px;
+  bottom: -60px;
+}
+
+.blob-blue {
+  background: #60a5fa;
+  left: 30%;
+  bottom: -80px;
+}
+
+@keyframes floatBlob {
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-40px) scale(1.1);
+  }
+}
+
+/* --------------------------------
+   Step Card — Tilt + Hover Effects
+-----------------------------------*/
+
+.step-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  border: 2px solid #e9d5ff;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  position: relative;
+}
+
+.step-card:hover {
+  transform: translateY(-6px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Lottie icons container */
+.step-icon {
+  width: 70px;
+  height: 70px;
+  margin-bottom: 12px;
+}
+
+/* Step title */
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4338ca;
+}
+
+/* Description text */
+.step-desc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* --------------------------------
+   Floating Step Number Badge
+-----------------------------------*/
+
+.step-badge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: white;
+  font-weight: bold;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.3);
+  animation: popIn 0.5s ease forwards;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* -----------------------------------------
+   Flow-Line connecting the step cards
+------------------------------------------*/
+
+.flow-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 5px;
+  width: 100%;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  /* Remove line on mobile */
+  .flow-line {
+    display: none;
+  }
+
+  /* mobile spacing */
+  .step-card {
+    transform: none;
+  }
+}

@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const Quotation = require('../models/Quotation');
+const EventImage = require('../models/EventImage');
 
 exports.availableEvents = async (req, res) => {
   // vendors see approved events
@@ -85,8 +86,35 @@ exports.updateProfile = async (req, res) => {
   const user = req.user;
   user.profile = { ...user.profile, ...req.body };
   user.profileComplete = Boolean(user.profile.name && user.profile.phone && user.profile.company);
+  
+  if (req.files) {
+    const photos = req.files.map(file => `/uploads/${file.filename}`);
+    user.photos = user.photos.concat(photos);
+  }
+
   await user.save();
-  res.json({ message: 'Profile updated', profile: user.profile, profileComplete: user.profileComplete });
+  res.json({ message: 'Profile updated', user });
+};
+
+// Upload photos related to an event (vendor can upload multiple photos)
+exports.uploadEventPhotos = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!req.files || req.files.length === 0) return res.status(400).json({ message: 'No files uploaded' });
+
+    const imgs = [];
+    for (const f of req.files) {
+      const imageUrl = `/uploads/${f.filename}`;
+      const img = await EventImage.create({ event: event._id, uploader: req.user._id, imageUrl, approved: false, forLanding: false });
+      imgs.push(img);
+    }
+    res.status(201).json({ message: 'Photos uploaded (pending admin approval)', images: imgs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.assignedEvents = async (req, res) => {
@@ -98,6 +126,24 @@ exports.assignedEvents = async (req, res) => {
       .populate('assignedVendors', 'name email')
       .populate({ path: 'vendorInterests', populate: { path: 'vendor', select: 'name email' } });
     res.json(events);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// vendor deletes their own account
+exports.deleteAccount = async (req, res) => {
+  try {
+    const u = req.user;
+    // remove quotations
+    await Quotation.deleteMany({ vendor: u._id });
+    // remove vendor from events assigned lists
+    await Event.updateMany({ assignedVendors: u._id }, { $pull: { assignedVendors: u._id } });
+    // remove event images uploaded by vendor
+    await EventImage.deleteMany({ uploader: u._id });
+    await u.deleteOne();
+    res.json({ message: 'Account deleted' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

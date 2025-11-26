@@ -9,9 +9,12 @@ export default function Vendor(){
   const [assignedEvents, setAssignedEvents] = useState([])
   const [editingProfile, setEditingProfile] = useState(false)
   const [profileData, setProfileData] = useState({})
+  const [photos, setPhotos] = useState([])
   const [message, setMessage] = useState('')
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [msg, setMsg] = useState('')
+  const [uploadFiles, setUploadFiles] = useState(null)
+  const [uploadEventTarget, setUploadEventTarget] = useState(null)
 
   useEffect(()=>{
     const t = localStorage.getItem('ef_token')
@@ -86,15 +89,57 @@ export default function Vendor(){
     }
   }
 
+  const handleFileChange = (e) => {
+    setPhotos(e.target.files);
+  };
+
+  const handleUploadFilesChange = (e) => {
+    setUploadFiles(e.target.files)
+  }
+
+  const uploadPhotosForEvent = async (eventId) => {
+    if(!uploadFiles || uploadFiles.length === 0) return setMsg('Please select files to upload')
+    try{
+      const formData = new FormData();
+      for(let i=0;i<uploadFiles.length;i++) formData.append('photos', uploadFiles[i]);
+      const res = await API.post(`/vendor/events/${eventId}/photos`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setMsg(res.data.message || 'Uploaded')
+      setUploadFiles(null)
+      setUploadEventTarget(null)
+      loadAssignedEvents()
+    }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || e.message)) }
+  }
+
   const updateProfile = async () => {
     try{
-      const res = await API.put('/vendor/profile', profileData)
+      const formData = new FormData();
+      Object.keys(profileData).forEach(key => {
+        formData.append(key, profileData[key]);
+      });
+      for (let i = 0; i < photos.length; i++) {
+        formData.append("photos", photos[i]);
+      }
+
+      const res = await API.patch('/vendor/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       setMsg(res.data.message)
-      setUser({...user, profileComplete: res.data.profileComplete})
+      setUser(res.data.user)
       setEditingProfile(false)
     }catch(e){
       setMsg('Error updating profile')
     }
+  }
+
+  const deleteAccount = async () => {
+    if(!window.confirm('Delete your account? This cannot be undone.')) return
+    try{
+      await API.delete('/vendor/profile')
+      localStorage.clear()
+      window.location.href = '/'
+    }catch(e){ setMsg('Error: ' + (e?.response?.data?.message || e.message)) }
   }
 
   if(!user) return <div className="p-4">Loading...</div>
@@ -129,11 +174,27 @@ export default function Vendor(){
               <input placeholder="Name" value={profileData.name || ''} onChange={e=>setProfileData({...profileData, name: e.target.value})} className="w-full p-2 border mb-2 rounded" />
               <input placeholder="Phone" value={profileData.phone || ''} onChange={e=>setProfileData({...profileData, phone: e.target.value})} className="w-full p-2 border mb-2 rounded" />
               <input placeholder="Company Name" value={profileData.company || ''} onChange={e=>setProfileData({...profileData, company: e.target.value})} className="w-full p-2 border mb-4 rounded" />
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Profile Photos</label>
+                <input type="file" multiple onChange={handleFileChange} className="w-full p-2 border rounded" />
+              </div>
+              
               <div className="flex gap-2">
                 <button onClick={updateProfile} className="bg-green-600 text-white px-4 py-2 rounded">Save</button>
                 <button onClick={()=>setEditingProfile(false)} className="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
               </div>
+
+              <div className="mt-4 flex gap-4 flex-wrap">
+                {user.photos && user.photos.map(photo => (
+                  <img key={photo} src={`${import.meta.env.VITE_API_URL}${photo}`} alt="profile" className="w-24 h-24 object-cover rounded" />
+                ))}
+              </div>
+              <div className="mt-4">
+              <button onClick={deleteAccount} className="bg-red-600 text-white px-4 py-2 rounded">Delete Account</button>
             </div>
+            </div>
+            
           )}
         </div>
 
@@ -224,6 +285,7 @@ export default function Vendor(){
                           <div>
                             <p className="text-sm">Quotation status: <span className="font-semibold">{myQuote.status}</span></p>
                             <p className="text-sm">Your status: <span className="font-semibold">{myQuote.vendorStatus || 'none'}</span></p>
+                            <p className="text-sm">Payment: <span className={`px-2 py-0.5 rounded text-xs ${myQuote.paid ? 'bg-green-200' : 'bg-yellow-200'}`}>{myQuote.paid ? 'Paid' : 'Unpaid'}</span></p>
                             <div className="mt-2 flex gap-2">
                               {(myQuote.vendorStatus === 'assigned' || (myQuote.status === 'approved' && !myQuote.vendorStatus)) && (
                                 <>
@@ -237,6 +299,14 @@ export default function Vendor(){
                                   <button onClick={()=>updateAssignment('deny', e._id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm">Deny</button>
                                 </>
                               )}
+                              <div className="mt-3">
+                                <p className="text-sm font-semibold">Upload photos for this event (will be pending approval)</p>
+                                <input type="file" multiple onChange={(ev)=>{ setUploadEventTarget(e._id); handleUploadFilesChange(ev) }} className="mt-2 mb-2" />
+                                <div className="flex gap-2">
+                                  <button onClick={()=>uploadPhotosForEvent(e._id)} className="bg-green-600 text-white px-3 py-1 rounded text-sm">Upload Photos</button>
+                                  <button onClick={()=>{ setUploadFiles(null); setUploadEventTarget(null) }} className="bg-gray-600 text-white px-3 py-1 rounded text-sm">Clear</button>
+                                </div>
+                              </div>
                               {myQuote.vendorStatus === 'completed' && (
                                 <span className="text-sm text-green-700 font-semibold">Completed</span>
                               )}
