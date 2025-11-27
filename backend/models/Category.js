@@ -28,6 +28,7 @@ const categorySchema = new mongoose.Schema({
   description: String,
   imageUrl: String,
   altText: String,
+  images: [{ url: String, altText: String, uploadedAt: Date }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Category', categorySchema);

@@ -1,3 +1,4 @@
+"use client";
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
@@ -12,6 +13,7 @@ import Client from './pages/Client'
 import Vendor from './pages/Vendor'
 import CategoryDetail from './pages/CategoryDetail'
 
+import { motion } from "framer-motion";
 function RootPage() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [userRole, setUserRole] = React.useState(null);
@@ -38,7 +40,27 @@ function RootPage() {
     return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading) return <div className="p-4">
+<div className="h-screen w-full flex items-center justify-center bg-gray-100">
+      <div className="flex space-x-3">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="w-4 h-4 bg-black rounded-full"
+            animate={{ y: [0, -10, 0] }}
+            transition={{
+              duration: 0.6,
+              repeat: Infinity,
+              delay: i * 0.2,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+
+
+  </div>;
 
   // If logged in, show role-specific dashboard
   if (isLoggedIn && userRole === 'admin') {

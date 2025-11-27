@@ -24,10 +24,13 @@ router.delete('/events/:id', adminController.deleteEvent);
 router.post('/events/:id/apply', adminController.applyPendingEdits);
 router.post('/events/:id/discard', adminController.discardPendingEdits);
 
-router.post('/categories', upload.single('image'), adminController.createCategory);
+router.post('/categories', upload.array('images'), adminController.createCategory);
 router.get('/categories', adminController.getCategories);
-router.patch('/categories/:id', upload.single('image'), adminController.updateCategory);
+router.patch('/categories/:id', upload.array('images'), adminController.updateCategory);
 router.delete('/categories/:id', adminController.deleteCategory);
+// upload multiple images to existing category
+router.post('/categories/:id/images', upload.array('images'), adminController.addCategoryImages);
+router.delete('/categories/:id/images', adminController.deleteCategoryImage);
 
 router.put('/quotations/:id', adminController.approveQuotation);
 router.put('/quotations/:id/payment', adminController.setPaymentStatus);

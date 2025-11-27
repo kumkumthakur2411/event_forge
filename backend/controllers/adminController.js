@@ -21,7 +21,14 @@ exports.getAllUsers = async (req, res) => {
 exports.createCategory = async (req, res) => {
   try {
     const { name, description, altText } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
+    // support single file (legacy) or multiple files via req.files
+    const images = [];
+    if (req.file) {
+      images.push({ url: `/uploads/${req.file.filename}`, altText: altText || '' , uploadedAt: new Date()});
+    }
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      req.files.forEach(f => images.push({ url: `/uploads/${f.filename}`, altText: altText || '', uploadedAt: new Date() }));
+    }
 
     if (!name) {
       return res.status(400).json({ message: 'Name is required' });
@@ -29,15 +36,15 @@ exports.createCategory = async (req, res) => {
 
     const existing = await Category.findOne({ name });
 
-    // If category exists, update image & alt text instead of throwing error
+    // If category exists, update image(s) & alt text instead of throwing error
     if (existing) {
-      existing.imageUrl = imageUrl || existing.imageUrl;
+      if (images.length > 0) existing.images = existing.images.concat(images);
       existing.altText = altText || existing.altText;
       existing.updatedAt = new Date();
       await existing.save();
 
       return res.status(200).json({
-        message: 'Category existed, image updated',
+        message: 'Category existed, images updated',
         category: existing,
       });
     }
@@ -46,8 +53,9 @@ exports.createCategory = async (req, res) => {
     const category = await Category.create({
       name,
       description,
-      imageUrl,
+      imageUrl: images.length > 0 ? images[0].url : undefined,
       altText,
+      images
     });
 
     res.status(201).json(category);
@@ -72,15 +80,28 @@ exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, altText } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
-
     const cat = await Category.findById(id);
     if (!cat) return res.status(404).json({ message: 'Category not found' });
 
     if (name) cat.name = name;
     if (description) cat.description = description;
-    if (imageUrl) cat.imageUrl = imageUrl;
     if (altText) cat.altText = altText;
+
+    // handle uploaded single file or multiple
+    if (req.file) {
+      const url = `/uploads/${req.file.filename}`;
+      cat.images = cat.images || [];
+      cat.images.push({ url, altText: altText || '' , uploadedAt: new Date() });
+      if (!cat.imageUrl) cat.imageUrl = url;
+    }
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      cat.images = cat.images || [];
+      req.files.forEach(f => {
+        const url = `/uploads/${f.filename}`;
+        cat.images.push({ url, altText: altText || '', uploadedAt: new Date() });
+        if (!cat.imageUrl) cat.imageUrl = url;
+      })
+    }
 
     await cat.save();
 
@@ -112,6 +133,42 @@ exports.deleteCategory = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// add images to category (multiple)
+exports.addCategoryImages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cat = await Category.findById(id);
+    if (!cat) return res.status(404).json({ message: 'Category not found' });
+    cat.images = cat.images || [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(f => cat.images.push({ url: `/uploads/${f.filename}`, altText: req.body.altText || '', uploadedAt: new Date() }));
+    }
+    await cat.save();
+    res.json({ message: 'Images added', category: cat });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// remove single category image by url
+exports.deleteCategoryImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
+    const cat = await Category.findById(id);
+    if (!cat) return res.status(404).json({ message: 'Category not found' });
+    cat.images = (cat.images || []).filter(i => i.url !== imageUrl);
+    // if primary image was removed, update imageUrl
+    if (cat.imageUrl === imageUrl) cat.imageUrl = cat.images.length > 0 ? cat.images[0].url : undefined;
+    await cat.save();
+    res.json({ message: 'Image removed', category: cat });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 exports.updateEvent = async (req, res) => {
