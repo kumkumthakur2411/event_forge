@@ -40,6 +40,8 @@ export default function CategoriesSection({ categories }) {
               {cat.description && (
                 <div className="text-sm text-blue-100">{cat.description}</div>
               )}
+
+              
             </div>
           ))}
         </div>
