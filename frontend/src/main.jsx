@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Landing from './pages/Landing'
+import TestimonialsPage from './pages/Testimonials'
 import Admin from './pages/Admin'
 import Categories from './pages/Categories'
 import Client from './pages/Client'
@@ -80,6 +81,7 @@ function App(){
       <Routes>
         <Route path='/' element={<RootPage/>} />
         <Route path='/category/:categoryId' element={<CategoryDetail/>} />
+        <Route path='/testimonials' element={<TestimonialsPage/>} />
         <Route path='/dashboard' element={<Dashboard/>} />
         <Route path='/login' element={<Login/>} />
         <Route path='/register' element={<Register/>} />

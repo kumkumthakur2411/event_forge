@@ -41,9 +41,11 @@ router.put('/quotations/bulk-payment', adminController.bulkSetPayment);
 
 router.get('/testimonials/pending', adminController.getPendingTestimonials);
 router.post('/testimonials/:id/approve', adminController.approveTestimonial);
+router.patch('/testimonials/:id/display', adminController.setTestimonialDisplay);
 router.delete('/testimonials/:id', adminController.rejectTestimonial);
 
 router.post('/images', upload.single('image'), adminController.uploadImage);
+router.patch('/images/:id', upload.single('image'), adminController.updateImage);
 router.get('/images', adminController.getImages);
 router.delete('/images/:id', adminController.deleteImage);
 // Event/gallery images

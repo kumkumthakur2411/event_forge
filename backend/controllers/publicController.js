@@ -43,7 +43,12 @@ exports.completedEvents = async (req, res) => {
 
 exports.testimonials = async (req, res) => {
   try{
-    let items = await Testimonial.find({ approved: true }).sort('-createdAt').limit(10);
+    // support landing view (only testimonials marked for landing) and custom limits
+    const landing = req.query.landing === 'true' || req.query.landing === '1';
+    const limit = parseInt(req.query.limit, 10) || (landing ? 6 : 10);
+    const filter = { approved: true };
+    if (landing) filter.displayOnLanding = true;
+    let items = await Testimonial.find(filter).sort('-createdAt').limit(limit);
     if(!items || items.length === 0){
       // fallback sample testimonials when DB empty
       items = [

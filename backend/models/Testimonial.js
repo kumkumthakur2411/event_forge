@@ -6,6 +6,7 @@ const TestimonialSchema = new mongoose.Schema({
   message: { type: String, required: true },
   avatar: { type: String },
   approved: { type: Boolean, default: false },
+  displayOnLanding: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

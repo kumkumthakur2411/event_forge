@@ -4,7 +4,8 @@ import API, { setToken } from '../api'
 import AdminUsers from '../components/admin/AdminUsers'
 import AdminEvents from '../components/admin/AdminEvents'
 import AdminSettings from '../components/admin/AdminSettings'
-import AdminImages from '../components/admin/AdminImages'
+import AdminWebImages from '../components/admin/AdminWebImages'
+import AdminEventImages from '../components/admin/AdminEventImages'
 import AdminTestimonials from '../components/admin/AdminTestimonials'
 import AdminPayments from '../components/admin/AdminPayments'
 import AdminCategories from '../components/admin/AdminCategories'
@@ -20,7 +21,10 @@ export default function Admin(){
   const [events, setEvents] = useState([])
   const [categories, setCategories] = useState([])
   const [testimonials, setTestimonials] = useState([])
-  const [images, setImages] = useState([])
+  const [pendingTestimonials, setPendingTestimonials] = useState([])
+  const [approvedTestimonials, setApprovedTestimonials] = useState([])
+  const [webImages, setWebImages] = useState([])
+  const [eventImages, setEventImages] = useState([])
   const [quotations, setQuotations] = useState([])
   
   // Filters and search
@@ -88,20 +92,36 @@ export default function Admin(){
   // Load testimonials
   const loadTestimonials = async () => {
     try{
-      const res = await API.get('/public/testimonials')
-      setTestimonials(res.data)
+      // pending (requires admin auth)
+      const pRes = await API.get('/admin/testimonials/pending')
+      setPendingTestimonials(pRes.data || [])
+      // approved (public)
+      const aRes = await API.get('/public/testimonials?limit=1000')
+      setApprovedTestimonials(aRes.data || [])
+      // legacy single testimonials state
+      setTestimonials(aRes.data || [])
     }catch(e){
       setMsg('Failed to load testimonials: ' + (e?.response?.data?.message || ''))
     }
   }
 
   // Load web images
-  const loadImages = async () => {
+  const loadWebImages = async () => {
     try{
-      const res = await API.get('/admin/web-images')
-      setImages(res.data)
+      const res = await API.get('/admin/images')
+      setWebImages(res.data)
     }catch(e){
-      setMsg('Failed to load images: ' + (e?.response?.data?.message || ''))
+      setMsg('Failed to load web images: ' + (e?.response?.data?.message || ''))
+    }
+  }
+
+  // Load event images
+  const loadEventImages = async () => {
+    try{
+      const res = await API.get('/admin/event-images')
+      setEventImages(res.data.images || [])
+    }catch(e){
+      setMsg('Failed to load event images: ' + (e?.response?.data?.message || ''))
     }
   }
 
@@ -139,7 +159,8 @@ export default function Admin(){
   // Load data when tab changes
   useEffect(() => {
     if(activeTab === 'testimonials') loadTestimonials()
-    if(activeTab === 'images') loadImages()
+    if(activeTab === 'images') loadWebImages()
+    if(activeTab === 'event-images') loadEventImages()
   },[activeTab])
 
   // Refresh on filter/search change
@@ -202,7 +223,13 @@ export default function Admin(){
             onClick={()=>setActiveTab('images')} 
             className={`px-4 py-2 rounded transition ${activeTab==='images'?'bg-blue-600 text-white':'bg-white hover:bg-gray-50'}`}
           >
-            Images
+            Web Images
+          </button>
+          <button 
+            onClick={()=>setActiveTab('event-images')} 
+            className={`px-4 py-2 rounded transition ${activeTab==='event-images'?'bg-blue-600 text-white':'bg-white hover:bg-gray-50'}`}
+          >
+            Event Gallery
           </button>
           <button 
             onClick={()=>setActiveTab('payments')} 
@@ -272,17 +299,29 @@ export default function Admin(){
 
         {activeTab === 'testimonials' && (
           <AdminTestimonials 
-            testimonials={testimonials}
+            pendingTestimonials={pendingTestimonials}
+            approvedTestimonials={approvedTestimonials}
             setMsg={setMsg}
             loadTestimonials={loadTestimonials}
           />
         )}
 
         {activeTab === 'images' && (
-          <AdminImages 
-            images={images}
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Web Section Images</h2>
+            <AdminWebImages 
+              images={webImages}
+              setMsg={setMsg}
+              loadImages={loadWebImages}
+            />
+          </div>
+        )}
+
+        {activeTab === 'event-images' && (
+          <AdminEventImages 
+            images={eventImages}
             setMsg={setMsg}
-            loadImages={loadImages}
+            loadImages={loadEventImages}
           />
         )}
 

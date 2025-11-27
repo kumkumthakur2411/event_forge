@@ -26,14 +26,20 @@ export default function Landing() {
   const [images, setImages] = useState([])
   const [imagesMap, setImagesMap] = useState({})
   const [eventImages, setEventImages] = useState([])
-
+const collageImages = [
+  "image1.jpg",
+  "image2.jpg",
+  "image3.jpg",
+  "image4.jpg",
+  "image5.jpg"
+];
   const load = async () => {
     try {
       const [vRes, catRes, cRes, tRes, iRes, egRes] = await Promise.all([
         API.get('/public/vendors'),
         API.get('/public/categories'),
         API.get('/public/events/completed'),
-        API.get('/public/testimonials'),
+        API.get('/public/testimonials?landing=true'),
         API.get('/public/images'),
         API.get('/public/event-images')
       ])
@@ -82,7 +88,12 @@ export default function Landing() {
 
       <VendorsSection vendors={vendors} />
       <CompletedEvents completed={completed} />
-      <Testimonials testimonials={testimonials} />
+      <Testimonials testimonials={testimonials} collageImages={collageImages}/>
+      <div className="max-w-6xl mx-auto px-4 mt-4">
+        <div className="text-center">
+          <a href="/testimonials" className="text-blue-600 underline">Show more testimonials</a>
+        </div>
+      </div>
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">

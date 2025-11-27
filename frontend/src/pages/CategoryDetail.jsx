@@ -42,7 +42,7 @@ export default function CategoryDetail() {
   return (
     <div>
       <LandingNavbar />
-      
+
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <button
@@ -52,45 +52,42 @@ export default function CategoryDetail() {
             ← Back to Home
           </button>
 
-{category && (
-  <div className="mb-12">
+          {category && (
+            <div className="mb-12">
 
-    {/* Top Banner Image */}
-    <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden shadow-xl">
-      <img
-        src={getFullImageUrl(category.imageUrl)}
-        alt={category.name}
-        className="w-full h-full object-cover"
-      />
+              {/* Top Banner Image */}
+              <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden shadow-xl">
+                <img
+                  src={getFullImageUrl(category.imageUrl)}
+                  alt={category.name}
+                  className="w-full h-full object-cover"
+                />
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/10"></div>
 
-      {/* Title on Image */}
-      <div className="absolute bottom-6 left-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
-          {category.name}
-        </h1>
-      </div>
-    </div>
+                {/* Title on Image */}
+                <div className="absolute bottom-6 left-6">
+                  <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
+                    {category.name}
+                  </h1>
+                </div>
+              </div>
 
-    {/* Descriptions Section */}
-    <div className="mt-8 bg-white p-6 rounded-xl shadow-md border border-gray-100">
-      {category.description && (
-        <p className="text-lg text-gray-700">{category.description}</p>
-      )}
-      
-      {category.longDescription && (
-        <p className="mt-4 text-gray-600 leading-relaxed">
-          {category.longDescription}
-        </p>
-      )}
-    </div>
-  </div>
-)}
+              {/* Descriptions Section */}
+              <div className="mt-8 bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                {category.description && (
+                  <p className="text-lg text-gray-700">{category.description}</p>
+                )}
 
-
-
+                {category.longDescription && (
+                  <p className="mt-4 text-gray-600 leading-relaxed">
+                    {category.longDescription}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           <div>
             <h2 className="text-2xl font-bold mb-6">
               Available Vendors ({vendors.length})

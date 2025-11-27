@@ -356,9 +356,28 @@ exports.getPendingTestimonials = async (req, res) => {
 exports.approveTestimonial = async (req, res) => {
   try {
     const { id } = req.params;
-    const testimonial = await Testimonial.findByIdAndUpdate(id, { approved: true }, { new: true });
+    // allow admin to optionally set displayOnLanding when approving
+    const { displayOnLanding } = req.body;
+    const update = { approved: true };
+    if (typeof displayOnLanding !== 'undefined') update.displayOnLanding = Boolean(displayOnLanding);
+    const testimonial = await Testimonial.findByIdAndUpdate(id, update, { new: true });
     if (!testimonial) return res.status(404).json({ message: 'Testimonial not found' });
     res.json({ message: 'Testimonial approved', testimonial });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+// set displayOnLanding flag (for approved testimonials or toggle)
+exports.setTestimonialDisplay = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { displayOnLanding } = req.body;
+    const t = await Testimonial.findById(id);
+    if (!t) return res.status(404).json({ message: 'Testimonial not found' });
+    t.displayOnLanding = Boolean(displayOnLanding);
+    await t.save();
+    res.json({ message: 'Display flag updated', testimonial: t });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -412,6 +431,28 @@ exports.deleteImage = async (req, res) => {
     const { id } = req.params;
     await WebImage.findByIdAndDelete(id);
     res.json({ message: 'Image deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { altText } = req.body;
+    const image = await WebImage.findById(id);
+    if (!image) return res.status(404).json({ message: 'Image not found' });
+    
+    if (req.file) {
+      image.imageUrl = `/uploads/${req.file.filename}`;
+    }
+    if (altText) {
+      image.altText = altText;
+    }
+    image.updatedAt = new Date();
+    await image.save();
+    res.json({ message: 'Image updated', image });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
