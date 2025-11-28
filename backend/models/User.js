@@ -17,7 +17,19 @@ const UserSchema = new mongoose.Schema({
   phoneNo: {
     type: String
   },
-  photos: [{ type: String }]
+  photos: [{ type: String }],
+  companyName: { type: String },
+  companyEmail: { type: String },
+  companyPhone: { type: String },
+  city: { type: String },
+  companyLogo: { type: String },
+  gst: { type: String },
+  pan: { type: String },
+  media: [{ type: String }],
+  vendorPhotos: [{ type: String }],
+  experience: { type: String },
+  bio: { type: String },
+  ratings: { type: Number, default: 0 }
 }, { timestamps: true });
 
 UserSchema.pre('save', async function (next) {

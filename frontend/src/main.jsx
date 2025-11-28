@@ -12,6 +12,7 @@ import Admin from './pages/Admin'
 import Categories from './pages/Categories'
 import Client from './pages/Client'
 import Vendor from './pages/Vendor'
+import VendorPublicProfile from './pages/VendorPublicProfile'
 import CategoryDetail from './pages/CategoryDetail'
 
 import { motion } from "framer-motion";
@@ -81,6 +82,7 @@ function App(){
       <Routes>
         <Route path='/' element={<RootPage/>} />
         <Route path='/category/:categoryId' element={<CategoryDetail/>} />
+        <Route path='/vendor/profile/:vendorId' element={<VendorPublicProfile/>} />
         <Route path='/testimonials' element={<TestimonialsPage/>} />
         <Route path='/dashboard' element={<Dashboard/>} />
         <Route path='/login' element={<Login/>} />

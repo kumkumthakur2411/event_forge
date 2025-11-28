@@ -7,9 +7,13 @@ const upload = require('../middleware/upload');
 router.use(protect);
 router.use(authorize('client'));
 
+// Profile endpoints
+router.get('/profile', require('../controllers/clientController').getProfile);
+router.patch('/profile', upload.single('profileImage'), updateProfile);
+router.put('/profile/password', require('../controllers/clientController').changePassword);
+
 router.post('/events', postEvent);
 router.get('/events', myEvents);
-router.patch('/profile', upload.single('profileImage'), updateProfile);
 router.post('/feedback', submitFeedback);
 // Client uploads photos for their own event (photos pending admin approval)
 router.post('/events/:eventId/photos', upload.array('photos', 10), require('../controllers/clientController').uploadEventPhotos);

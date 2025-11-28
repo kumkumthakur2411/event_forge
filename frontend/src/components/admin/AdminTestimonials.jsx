@@ -48,10 +48,15 @@ export default function AdminTestimonials({ pendingTestimonials = [], approvedTe
             {localPending.map(t => (
               <div key={t._id} className="border rounded p-3 bg-gray-50">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-semibold">{t.name}</div>
-                    <div className="text-xs text-gray-600">{t.role}</div>
-                    <div className="mt-2 text-sm">{t.message}</div>
+                  <div className="flex items-center gap-3">
+                    {t.avatar && (
+                      <img src={getFullImageUrl(t.avatar)} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                    )}
+                    <div>
+                      <div className="font-semibold">{t.name}</div>
+                      <div className="text-xs text-gray-600">{t.role}</div>
+                      <div className="mt-2 text-sm">{t.message}</div>
+                    </div>
                   </div>
                   <div className="ml-4 flex flex-col items-end">
                     <label className="text-xs mb-2 flex items-center gap-2">
@@ -77,10 +82,15 @@ export default function AdminTestimonials({ pendingTestimonials = [], approvedTe
             {localApproved.map(t => (
               <div key={t._id} className="border rounded p-4 bg-gray-50">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-semibold">{t.name}</div>
-                    <div className="text-xs text-gray-600">{t.role}</div>
-                    <div className="mt-2 text-sm">{t.message}</div>
+                  <div className="flex items-center gap-3">
+                    {t.avatar && (
+                      <img src={getFullImageUrl(t.avatar)} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                    )}
+                    <div>
+                      <div className="font-semibold">{t.name}</div>
+                      <div className="text-xs text-gray-600">{t.role}</div>
+                      <div className="mt-2 text-sm">{t.message}</div>
+                    </div>
                   </div>
                   <div className="ml-4 flex flex-col items-end">
                     <label className="text-xs mb-2 flex items-center gap-2">

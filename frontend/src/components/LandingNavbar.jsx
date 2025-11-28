@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, ChevronDown, Search, LogIn, Images, Grid3X3, User } from "lucide-react";
 import API from "../api";
 
 export default function LandingNavbar({ onSearchResults, logoUrl }) {
   const [q, setQ] = useState("");
+  const [siteName, setSiteName] = useState('event forge')
   const [suggestions, setSuggestions] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -30,13 +31,24 @@ export default function LandingNavbar({ onSearchResults, logoUrl }) {
     doSearch(q);
   };
 
+  useEffect(()=>{
+    // load public settings (site name/contact)
+    let mounted = true
+    API.get('/public/settings').then(r=>{
+      if(!mounted) return
+      const s = r.data || {}
+      if(s.siteName) setSiteName(s.siteName)
+    }).catch(()=>{})
+    return ()=>{ mounted = false }
+  }, [])
+
   return (
     <nav
       className="
       sticky top-0 z-50 backdrop-blur-xl bg-white/40 
       border-b border-white/30 shadow-sm"
     >
-      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-6 py-1 flex justify-between items-center">
 
         {/* LOGO */}
         <div className="flex items-center gap-3">
@@ -45,7 +57,7 @@ export default function LandingNavbar({ onSearchResults, logoUrl }) {
             className="w-10 h-10 rounded-full shadow-md"
           />
           <h1 className="text-2xl font-bold tracking-wide bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-            VendorForge
+            {siteName}
           </h1>
         </div>
 

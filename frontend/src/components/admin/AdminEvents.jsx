@@ -112,8 +112,15 @@ export default function AdminEvents({ events, setMsg, loadEvents }) {
     }`}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h4 className="font-bold text-lg">{event.title}</h4>
-          <p className="text-sm text-gray-600">By: {event.postedBy?.name || event.postedBy?.email}</p>
+          <div className="flex items-center gap-3 mb-2">
+            {event.postedBy?.profileImage && (
+              <img src={getFullImageUrl(event.postedBy.profileImage)} alt={event.postedBy.name} className="w-10 h-10 rounded-full object-cover" />
+            )}
+            <div>
+              <h4 className="font-bold text-lg">{event.title}</h4>
+              <p className="text-sm text-gray-600">By: {event.postedBy?.name || event.postedBy?.email}</p>
+            </div>
+          </div>
           <p className="text-sm text-gray-600">{event.location} • {new Date(event.date).toLocaleDateString()}</p>
           <p className="text-sm mt-1 text-gray-700 line-clamp-2">{event.description}</p>
         </div>

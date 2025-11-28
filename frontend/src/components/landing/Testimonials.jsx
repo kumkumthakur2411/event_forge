@@ -1,5 +1,6 @@
 import React from 'react'
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"
+import { getFullImageUrl } from '../../utils/getBaseUrl'
 
 export default function Testimonials({ collageImages, testimonials = [] }) {
   const mid = Math.ceil(testimonials.length / 2)
@@ -36,8 +37,15 @@ export default function Testimonials({ collageImages, testimonials = [] }) {
                 viewport={{ once: true }}
                 className="p-8 bg-white shadow-2xl rounded-3xl border border-beige-200 hover:shadow-3xl hover:scale-105 transition-transform cursor-pointer"
               >
-                <h3 className="text-2xl font-serif font-bold text-gray-800 mb-2">{t.name}</h3>
-                <p className="text-sm text-gray-600 italic mb-4">{t.role}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  {t.avatar && (
+                    <img src={getFullImageUrl(t.avatar)} alt={t.name} className="w-12 h-12 rounded-full object-cover" />
+                  )}
+                  <div className="text-left">
+                    <h3 className="text-lg font-serif font-bold text-gray-800">{t.name}</h3>
+                    <p className="text-sm text-gray-600 italic">{t.role}</p>
+                  </div>
+                </div>
                 <p className="text-gray-700 leading-relaxed">"{t.message}"</p>
               </motion.div>
             ))}
@@ -54,8 +62,15 @@ export default function Testimonials({ collageImages, testimonials = [] }) {
                 viewport={{ once: true }}
                 className="p-10 bg-white shadow-2xl rounded-3xl border border-beige-200 hover:shadow-3xl hover:scale-105 transition-transform cursor-pointer"
               >
-                <h3 className="text-2xl font-serif font-bold text-gray-800 mb-2">{t.name}</h3>
-                <p className="text-sm text-gray-600 italic mb-5">{t.role}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  {t.avatar && (
+                    <img src={getFullImageUrl(t.avatar)} alt={t.name} className="w-12 h-12 rounded-full object-cover" />
+                  )}
+                  <div className="text-left">
+                    <h3 className="text-lg font-serif font-bold text-gray-800">{t.name}</h3>
+                    <p className="text-sm text-gray-600 italic">{t.role}</p>
+                  </div>
+                </div>
                 <p className="text-gray-700 leading-relaxed">"{t.message}"</p>
               </motion.div>
             ))}

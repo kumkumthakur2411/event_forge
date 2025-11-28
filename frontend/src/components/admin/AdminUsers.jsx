@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import API from '../../api'
+import { getFullImageUrl } from '../../utils/getBaseUrl'
 
 export default function AdminUsers({ users, categories, setMsg, loadUsers, searchQ, setSearchQ, roleFilter, setRoleFilter, catFilter, setCatFilter }) {
   const [selectedUserId, setSelectedUserId] = useState(null)
@@ -91,6 +92,7 @@ export default function AdminUsers({ users, categories, setMsg, loadUsers, searc
         <table className="w-full text-sm">
           <thead className="bg-gray-200">
             <tr>
+              <th className="p-2 text-left">Photo</th>
               <th className="p-2 text-left">Email</th>
               <th className="p-2 text-left">Role</th>
               <th className="p-2 text-left">Categories</th>
@@ -101,6 +103,13 @@ export default function AdminUsers({ users, categories, setMsg, loadUsers, searc
           <tbody>
             {users.map(u => (
               <tr key={u._id} className="border-t">
+                <td className="p-2">
+                  {u.profileImage ? (
+                    <img src={getFullImageUrl(u.profileImage)} alt={u.email} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-300"></div>
+                  )}
+                </td>
                 <td className="p-2">
                   <button onClick={() => openUserDetails(u._id)} className="text-blue-600 underline">{u.email}</button>
                 </td>
@@ -128,9 +137,16 @@ export default function AdminUsers({ users, categories, setMsg, loadUsers, searc
         <div className="mt-4 p-4 bg-gray-50 rounded border-l-4 border-blue-600">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-bold text-lg">User Details</h3>
-              <p className="text-sm text-gray-600">Name: {selectedUserDetails.name || '(n/a)'}</p>
-              <p className="text-sm text-gray-600">Email: {selectedUserDetails.email}</p>
+              <div className="flex items-center gap-4 mb-4">
+                {selectedUserDetails.profileImage && (
+                  <img src={getFullImageUrl(selectedUserDetails.profileImage)} alt={selectedUserDetails.email} className="w-16 h-16 rounded-full object-cover" />
+                )}
+                <div>
+                  <h3 className="font-bold text-lg">User Details</h3>
+                  <p className="text-sm text-gray-600">Name: {selectedUserDetails.name || '(n/a)'}</p>
+                  <p className="text-sm text-gray-600">Email: {selectedUserDetails.email}</p>
+                </div>
+              </div>
               <p className="text-sm text-gray-600">Role: {selectedUserDetails.role}</p>
               <p className="text-sm text-gray-600">Status: <span className={`px-2 py-0.5 rounded text-xs ${selectedUserDetails.status === 'approved' ? 'bg-green-200' : 'bg-yellow-200'}`}>{selectedUserDetails.status}</span></p>
               <p className="text-sm text-gray-600">Categories: {(selectedUserDetails.categories || []).map(c => c.name).join(', ')}</p>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { getFullImageUrl } from '../../utils/getBaseUrl'
 
 export default function CompletedEvents({ completed }) {
   return (
@@ -10,8 +11,13 @@ export default function CompletedEvents({ completed }) {
           {completed.map(e => (
             <div key={e._id} className="p-4 bg-white rounded shadow">
               <div className="font-semibold">{e.title}</div>
-              <div className="text-sm text-gray-600">
-                Posted by: {e.postedBy?.email}
+              <div className="flex items-center gap-2 mt-2">
+                {e.postedBy?.profileImage && (
+                  <img src={getFullImageUrl(e.postedBy.profileImage)} alt={e.postedBy.name} className="w-8 h-8 rounded-full object-cover" />
+                )}
+                <div className="text-sm text-gray-600">
+                  Posted by: {e.postedBy?.email}
+                </div>
               </div>
             </div>
           ))}

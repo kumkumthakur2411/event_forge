@@ -9,11 +9,12 @@ import AdminEventImages from '../components/admin/AdminEventImages'
 import AdminTestimonials from '../components/admin/AdminTestimonials'
 import AdminPayments from '../components/admin/AdminPayments'
 import AdminCategories from '../components/admin/AdminCategories'
+import AdminQuickActions from '../components/admin/AdminQuickActions'
 
 export default function Admin(){
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  const [activeTab, setActiveTab] = useState('users')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [msg, setMsg] = useState('')
   
   // Shared state
@@ -196,6 +197,12 @@ export default function Admin(){
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-6 flex-wrap">
           <button 
+            onClick={()=>setActiveTab('dashboard')} 
+            className={`px-4 py-2 rounded transition ${activeTab==='dashboard'?'bg-blue-600 text-white':'bg-white hover:bg-gray-50'}`}  
+          >
+            Dashboard
+          </button>
+          <button 
             onClick={()=>setActiveTab('users')} 
             className={`px-4 py-2 rounded transition ${activeTab==='users'?'bg-blue-600 text-white':'bg-white hover:bg-gray-50'}`}
           >
@@ -245,25 +252,14 @@ export default function Admin(){
           </button>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded shadow text-center hover:shadow-lg transition">
-            <div className="text-sm text-gray-600">Vendors</div>
-            <div className="text-2xl font-bold text-blue-600">{stats.vendorsCount}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow text-center hover:shadow-lg transition">
-            <div className="text-sm text-gray-600">Clients</div>
-            <div className="text-2xl font-bold text-green-600">{stats.clientsCount}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow text-center hover:shadow-lg transition">
-            <div className="text-sm text-gray-600">Completed Events</div>
-            <div className="text-2xl font-bold text-purple-600">{stats.completedEvents}</div>
-          </div>
-          <div className="bg-white p-4 rounded shadow text-center hover:shadow-lg transition">
-            <div className="text-sm text-gray-600">Pending Events</div>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingEvents}</div>
-          </div>
-        </div>
+        {/* Quick Actions Section */}
+        {activeTab==='dashboard' && (
+          <AdminQuickActions 
+          setMsg={setMsg} 
+          setActiveTab={setActiveTab} 
+          stats={stats}
+          loadStats={loadStats}
+          />)}
 
         {/* Tab Content */}
         {activeTab === 'users' && (

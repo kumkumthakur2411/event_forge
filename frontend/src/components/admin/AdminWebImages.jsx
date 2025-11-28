@@ -11,7 +11,8 @@ export default function AdminWebImages({ images, setMsg, loadImages }) {
   const [newSection, setNewSection] = useState('hero')
   const [newAltText, setNewAltText] = useState('')
 
-  const sections = ['hero', 'navbar-logo', 'box1', 'box2', 'howitworks']
+  const sections = ['hero', 'navbar-logo', 'box1', 'box2', 
+    'how-it work-1', 'how-it work-2', 'how-it work-3', 'how-it work-4', 'footer']
 
   const handleUpload = async () => {
     if (!newFile || !newSection) return setMsg('File and section required')

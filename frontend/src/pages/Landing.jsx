@@ -62,7 +62,12 @@ const collageImages = [
   useEffect(() => {
     load()
   }, [])
-
+const howItWorksImages = [
+  getFullImageUrl(imagesMap["how-it work-1"]?.imageUrl),
+  getFullImageUrl(imagesMap["how-it work-2"]?.imageUrl),
+  getFullImageUrl(imagesMap["how-it work-3"]?.imageUrl),
+  getFullImageUrl(imagesMap["how-it work-4"]?.imageUrl)
+];
   return (
     <div>
       {/* Navbar */}
@@ -80,7 +85,7 @@ const collageImages = [
       />
 
       {/* Modular Sections */}
-      <HowItWorks icon={getFullImageUrl(imagesMap['hero']?.imageUrl)} />
+      <HowItWorks images={howItWorksImages} />
       <WhyChooseUs/>
       <EventsGallery eventImages={eventImages} />
 

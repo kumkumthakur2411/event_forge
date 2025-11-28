@@ -33,18 +33,79 @@ exports.myEvents = async (req, res) => {
   res.json(results);
 };
 
-exports.updateProfile = async (req, res) => {
-  const user = req.user;
-  user.profile = { ...user.profile, ...req.body };
-  // basic heuristic: if name and phone exist then profile complete
-  user.profileComplete = Boolean(user.profile.name && user.profile.phone);
-
-  if (req.file) {
-    user.profileImage = `/uploads/${req.file.filename}`;
+// Get client profile
+exports.getProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    const safe = user.toObject();
+    delete safe.password;
+    res.json(safe);
+  } catch (err) {
+    console.error('getProfile error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
+};
 
-  await user.save();
-  res.json({ message: 'Profile updated', user });
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    const { name, phone, city, email } = req.body;
+
+    // update name if provided
+    if (name) user.name = name;
+    
+    // update profile object
+    user.profile = { ...user.profile, ...(req.body.profile || {}) };
+    if (phone) user.profile.phone = phone;
+    if (city) user.profile.city = city;
+    
+    // basic heuristic: if name and phone exist then profile complete
+    user.profileComplete = Boolean(user.name && user.profile.phone);
+
+    // handle email change (must be unique)
+    if (email && email !== user.email) {
+      const User = require('../models/User');
+      const existing = await User.findOne({ email, _id: { $ne: user._id } });
+      if (existing) return res.status(400).json({ message: 'Email already in use' });
+      user.email = email;
+    }
+
+    if (req.file) {
+      user.profileImage = `/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+    const safe = user.toObject();
+    delete safe.password;
+    res.json({ message: 'Profile updated', user: safe });
+  } catch (err) {
+    console.error('updateProfile error:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
+  }
+};
+
+// Change client password
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'currentPassword and newPassword required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const user = req.user;
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('changePassword error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Client uploads photos for their event
@@ -75,7 +136,7 @@ exports.submitFeedback = async (req, res) => {
     if (!message) return res.status(400).json({ message: 'Message is required' });
     const name = req.user.name || req.user.email || 'Client';
     const role = 'Client';
-    const avatar = (req.user.profile && req.user.profile.avatar) ? req.user.profile.avatar : '';
+    const avatar = req.user.profileImage || (req.user.profile && req.user.profile.avatar) || '';
     const t = await Testimonial.create({ name, role, message, avatar });
     res.status(201).json({ message: 'Thank you for your feedback', testimonial: t });
   } catch (err) {

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function HowItWorks({ icon }) {
+export default function HowItWorks({ images }) {
   const steps = [
     { title: "Post your event", desc: "Tell us your event details & needs." },
     {
@@ -107,7 +107,7 @@ export default function HowItWorks({ icon }) {
 
               {/* Icon */}
               <img
-                src={icon}
+                src={images[index]}
                 className="w-12 h-12 mb-4 relative z-10 mx-auto drop-shadow-lg"
                 alt="icon"
               />

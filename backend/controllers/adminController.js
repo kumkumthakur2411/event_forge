@@ -5,6 +5,7 @@ const Category = require('../models/Category');
 const Testimonial = require('../models/Testimonial');
 const WebImage = require('../models/WebImage');
 const EventImage = require('../models/EventImage');
+const Settings = require('../models/Settings');
 
 //get all user with sorting
 exports.getAllUsers = async (req, res) => {
@@ -577,6 +578,50 @@ exports.getStats = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get admin settings (single document)
+exports.getSettings = async (req, res) => {
+  try {
+    let s = await Settings.findOne();
+    if (!s) {
+      // create default if not present
+      s = await Settings.create({});
+    }
+    res.json(s);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update admin settings (upsert)
+exports.updateSettings = async (req, res) => {
+  try {
+    console.log('admin.updateSettings called by', req.user ? req.user._id : 'unauthenticated', 'payload:', req.body);
+    if (!req.user) return res.status(401).json({ message: 'Authentication required' });
+
+    const payload = {};
+    // whitelist allowed fields
+    const allowed = ['siteName','defaultEventApproval','defaultTestimonialDisplay','defaultUserRole','notifyOnNewRegistration','itemsPerPage','quickActionsEnabled','adminEmail','adminPhone'];
+    for (const k of allowed) {
+      if (typeof req.body[k] !== 'undefined') payload[k] = req.body[k];
+    }
+    // sanitize numeric
+    if (payload.itemsPerPage) {
+      const n = parseInt(payload.itemsPerPage, 10);
+      payload.itemsPerPage = isNaN(n) || n < 1 ? 10 : n;
+    }
+    payload.updatedAt = new Date();
+
+    const s = await Settings.findOneAndUpdate({}, payload, { new: true, upsert: true, setDefaultsOnInsert: true });
+    console.log('admin.updateSettings result:', s);
+    res.json({ message: 'Settings updated', settings: s });
+  } catch (err) {
+    console.error('Error in updateSettings:', err);
+    const msg = err?.message || 'Server error';
+    res.status(500).json({ message: msg });
   }
 };
 

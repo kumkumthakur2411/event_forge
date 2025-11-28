@@ -5,6 +5,7 @@ const Testimonial = require('../models/Testimonial');
 const WebImage = require('../models/WebImage');
 const Category = require('../models/Category');
 const EventImage = require('../models/EventImage');
+const Settings = require('../models/Settings');
 
 exports.listVendors = async (req, res) => {
   try{
@@ -109,6 +110,27 @@ exports.eventGallery = async (req, res) => {
     res.json(images);
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Public site settings (only expose non-sensitive fields)
+exports.getSettings = async (req, res) => {
+  try {
+    let s = await Settings.findOne();
+    if (!s) {
+      // return sensible defaults if not configured
+      return res.json({ siteName: 'Event Forge', adminEmail: '', adminPhone: '' });
+    }
+    // Only send safe/public fields
+    const out = {
+      siteName: s.siteName || 'Event Forge',
+      adminEmail: s.adminEmail || '',
+      adminPhone: s.adminPhone || ''
+    };
+    res.json(out);
+  } catch (err) {
+    console.error('public.getSettings error', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

@@ -8,7 +8,7 @@ const HeroSection = ({ heroImg, box1, box2, categories }) => {
   const currentItem = loop[key % loop.length];
 
   return (
-    <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-20 overflow-hidden">
+    <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-10 overflow-hidden">
       {/* WAVY SVG BACKGROUND */}
       {/* <div className="absolute inset-0 z-0 overflow-hidden">
         <svg
@@ -127,7 +127,7 @@ const HeroSection = ({ heroImg, box1, box2, categories }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mt-20 text-center text-3xl md:text-5xl font-extrabold"
+        className="mt-12 text-center text-3xl md:text-5xl font-extrabold"
       >
         <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
           {currentItem}

@@ -44,6 +44,10 @@ router.post('/testimonials/:id/approve', adminController.approveTestimonial);
 router.patch('/testimonials/:id/display', adminController.setTestimonialDisplay);
 router.delete('/testimonials/:id', adminController.rejectTestimonial);
 
+// Admin settings
+router.get('/settings', adminController.getSettings);
+router.put('/settings', adminController.updateSettings);
+
 router.post('/images', upload.single('image'), adminController.uploadImage);
 router.patch('/images/:id', upload.single('image'), adminController.updateImage);
 router.get('/images', adminController.getImages);
