@@ -7,6 +7,7 @@ export default function VendorSettings({ vendor, onUpdate }) {
   const [profileImage, setProfileImage] = useState(null)
   const [profileImageFile, setProfileImageFile] = useState(null)
   const [formData, setFormData] = useState({
+    profileImage: '',
     name: '',
     email: '',
     phoneNo: '',
